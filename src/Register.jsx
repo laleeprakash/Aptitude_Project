@@ -1,58 +1,61 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const API = import.meta.env.VITE_API_URL; // e.g. https://your-backend.com
+
 const Register = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [messageColor, setMessageColor] = useState("red");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const isValidEmail = (email) =>
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
-
   const isValidPassword = (password) => password.length >= 6;
 
-  const handleRegister = async () => {
+  const handleRegister = async (e) => {
+    e.preventDefault();
     setMessage("");
 
+    // Basic client-side validation
     if (!username || !email || !password) {
-      setMessage("All fields are required!");
-      return;
+      setMessageColor("red");
+      return setMessage("All fields are required!");
     }
-
     if (!isValidEmail(email)) {
-      setMessage("Please enter a valid email!");
-      return;
+      setMessageColor("red");
+      return setMessage("Please enter a valid email!");
     }
-
     if (!isValidPassword(password)) {
-      setMessage("Password must be at least 6 characters!");
-      return;
+      setMessageColor("red");
+      return setMessage("Password must be at least 6 characters!");
     }
 
     setLoading(true);
-
     try {
-      const response = await fetch("https://aptitude-project.onrender.com/signup", {
+      const res = await fetch(`${API}/signup`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password }),
       });
+      const data = await res.json();
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage("✅ Registration Successful! Redirecting to Login...");
-        setTimeout(() => navigate("/login"), 1500);
+      if (res.ok) {
+        setMessageColor("green");
+        setMessage("✅ Registration successful! Redirecting to Login...");
+        setTimeout(() => {
+          navigate("/login");
+        }, 1500);
       } else {
+        setMessageColor("red");
         setMessage(data.error || "Registration failed!");
       }
-    } catch (error) {
-      console.error("Error:", error);
+    } catch (err) {
+      console.error("Register Error:", err);
+      setMessageColor("red");
       setMessage("Server error! Please try again later.");
     } finally {
       setLoading(false);
@@ -62,13 +65,14 @@ const Register = () => {
   return (
     <div style={styles.container}>
       <h2>Register</h2>
-      <div style={styles.form}>
+      <form onSubmit={handleRegister} style={styles.form}>
         <input
           type="text"
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           style={styles.input}
+          required
         />
         <input
           type="email"
@@ -76,23 +80,23 @@ const Register = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           style={styles.input}
+          required
         />
         <input
           type="password"
-          placeholder="Password"
+          placeholder="Password (min 6 chars)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={styles.input}
+          required
         />
-        <button
-          onClick={handleRegister}
-          style={styles.button}
-          disabled={loading}
-        >
+        <button type="submit" style={styles.button} disabled={loading}>
           {loading ? "Registering..." : "Register"}
         </button>
-        {message && <p style={styles.message}>{message}</p>}
-      </div>
+        {message && (
+          <p style={{ ...styles.message, color: messageColor }}>{message}</p>
+        )}
+      </form>
     </div>
   );
 };
@@ -114,6 +118,7 @@ const styles = {
     borderRadius: "5px",
     border: "1px solid #ccc",
     fontSize: "16px",
+    width: "100%",
   },
   button: {
     padding: "10px",
@@ -126,7 +131,6 @@ const styles = {
   },
   message: {
     marginTop: "10px",
-    color: "#333",
     fontWeight: "bold",
   },
 };
