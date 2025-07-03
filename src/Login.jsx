@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const API = import.meta.env.VITE_API_URL; // e.g. https://your-backend.onrender.com
-
+const API = import.meta.env.VITE_API_URL; 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
