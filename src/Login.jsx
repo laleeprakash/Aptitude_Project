@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+
+const API = import.meta.env.VITE_API_URL; // e.g. https://your-backend.onrender.com
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -10,48 +12,55 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // On mount, attach token if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    }
+  }, []);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
     try {
-      const response = await axios.post("https://aptitude-project.onrender.com/signin", {
+      const { data } = await axios.post(`${API}/signin`, {
         email,
         password,
       });
 
-      console.log("Login Response:", response.data);
+      console.log("Login response:", data.user);
 
-      if (response.data.token) {
-        // Save token and userId from response
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("userId", response.data.user.id); // Fix: Save userId correctly
+      if (data.token && data.user?.id) {
+        // Save token and userId
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("userId", data.user.id);
+
+        // Attach for future requests
+        axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
 
         setMessageColor("green");
-        setMessage("Login Successful!");
+        setMessage("Login successful!");
 
-        // Redirect after a short delay
         setTimeout(() => {
           navigate("/category");
-        }, 1000);
+        }, 500);
       } else {
-        setMessageColor("red");
-        setMessage("Login Failed! Invalid credentials.");
+        throw new Error("Invalid credentials");
       }
-    } catch (error) {
-      console.error("Login Error:", error);
-
+    } catch (err) {
+      console.error("Login error:", err);
       setMessageColor("red");
-
-      if (error.response?.status === 400) {
+      if (err.response?.status === 400) {
         setMessage("Incorrect email or password!");
       } else {
-        setMessage("Unable to connect to the server. Try again later.");
+        setMessage("Unable to connect to server. Try again later.");
       }
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -78,7 +87,9 @@ const Login = () => {
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
-      {message && <p style={{ ...styles.message, color: messageColor }}>{message}</p>}
+      {message && (
+        <p style={{ ...styles.message, color: messageColor }}>{message}</p>
+      )}
     </div>
   );
 };
