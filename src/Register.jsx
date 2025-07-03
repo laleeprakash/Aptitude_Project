@@ -1,26 +1,27 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-const API = import.meta.env.VITE_API_URL; // e.g. https://your-backend.com
+const API = import.meta.env.VITE_API_URL; // e.g. https://dinewithus-1.onrender.com
 
 const Register = () => {
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail]     = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage]   = useState("");
   const [messageColor, setMessageColor] = useState("red");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]   = useState(false);
   const navigate = useNavigate();
 
   const isValidEmail = (email) =>
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
-  const isValidPassword = (password) => password.length >= 6;
+  const isValidPassword = (pwd) => pwd.length >= 6;
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setMessage("");
-
-    // Basic client-side validation
+    
+    // Client‑side validation
     if (!username || !email || !password) {
       setMessageColor("red");
       return setMessage("All fields are required!");
@@ -36,27 +37,28 @@ const Register = () => {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API}/signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }),
-      });
-      const data = await res.json();
+      const { data, status } = await axios.post(
+        `${API}/signup`,
+        { username, email, password },
+        { headers: { "Content-Type": "application/json" } }
+      );
 
-      if (res.ok) {
+      if (status === 201) {
         setMessageColor("green");
         setMessage("✅ Registration successful! Redirecting to Login...");
-        setTimeout(() => {
-          navigate("/login");
-        }, 1500);
+        setTimeout(() => navigate("/login"), 1500);
       } else {
         setMessageColor("red");
         setMessage(data.error || "Registration failed!");
       }
     } catch (err) {
-      console.error("Register Error:", err);
+      console.error("Signup error:", err);
       setMessageColor("red");
-      setMessage("Server error! Please try again later.");
+      if (err.response?.status === 400) {
+        setMessage(err.response.data.error);
+      } else {
+        setMessage("Server error! Please try again later.");
+      }
     } finally {
       setLoading(false);
     }
@@ -93,44 +95,48 @@ const Register = () => {
         <button type="submit" style={styles.button} disabled={loading}>
           {loading ? "Registering..." : "Register"}
         </button>
-        {message && (
-          <p style={{ ...styles.message, color: messageColor }}>{message}</p>
-        )}
       </form>
+      {message && (
+        <p style={{ ...styles.message, color: messageColor }}>{message}</p>
+      )}
     </div>
   );
 };
 
 const styles = {
   container: {
-    textAlign: "center",
-    padding: "30px",
     maxWidth: "400px",
-    margin: "0 auto",
+    margin: "2rem auto",
+    textAlign: "center",
+    padding: "1rem",
+    border: "1px solid #eee",
+    borderRadius: "8px",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
   },
   form: {
     display: "flex",
     flexDirection: "column",
-    gap: "15px",
+    gap: "1rem",
+    marginTop: "1rem",
   },
   input: {
-    padding: "10px",
-    borderRadius: "5px",
+    padding: "0.75rem",
+    fontSize: "1rem",
+    borderRadius: "4px",
     border: "1px solid #ccc",
-    fontSize: "16px",
     width: "100%",
   },
   button: {
-    padding: "10px",
-    backgroundColor: "#007BFF",
-    color: "white",
+    padding: "0.75rem",
+    fontSize: "1rem",
+    borderRadius: "4px",
     border: "none",
+    backgroundColor: "#007BFF",
+    color: "#fff",
     cursor: "pointer",
-    borderRadius: "5px",
-    fontSize: "16px",
   },
   message: {
-    marginTop: "10px",
+    marginTop: "1rem",
     fontWeight: "bold",
   },
 };
