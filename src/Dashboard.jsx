@@ -22,7 +22,7 @@ const Dashboard = () => {
       }
 
       try {
-        const response = await axios.get(`http://localhost:3000/dashboard/${userId}`);
+        const response = await axios.get(`https://aptitude-project.onrender.com/dashboard/${userId}`);
         setProfile(response.data.profile);
         setScores(response.data.scores);
         setFeedback(response.data.feedback);

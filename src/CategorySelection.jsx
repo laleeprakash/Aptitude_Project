@@ -15,7 +15,7 @@ const CategorySelection = () => {
   useEffect(() => {
     setLoading(true);
     axios
-      .get("http://localhost:3000/categories/")
+      .get("https://aptitude-project.onrender.com/categories/")
       .then((response) => {
         setCategories(response.data);
         setLoading(false);
@@ -32,7 +32,7 @@ const CategorySelection = () => {
     if (selectedCategory) {
       setLoading(true);
       axios
-        .get(`http://localhost:3000/get_subcategory?categoryId=${selectedCategory.id}`)
+        .get(`https://aptitude-project.onrender.com/get_subcategory?categoryId=${selectedCategory.id}`)
         .then((response) => {
           setSubcategories(response.data);
           setLoading(false);

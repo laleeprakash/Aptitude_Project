@@ -35,7 +35,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3000/signup", {
+      const response = await fetch("https://aptitude-project.onrender.com/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
