@@ -1,16 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const API = import.meta.env.VITE_API_URL; // e.g. https://dinewithus-1.onrender.com
+let API = import.meta.env.VITE_API_URL;
+if (!API) {
+  // Fallback or default
+  API = "https://dinewithus-1.onrender.com";
+  console.warn("VITE_API_URL is undefined—falling back to", API);
+}
 
 const Register = () => {
-  const [username, setUsername] = useState("");
-  const [email, setEmail]     = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage]   = useState("");
+  const [username, setUsername]     = useState("");
+  const [email, setEmail]           = useState("");
+  const [password, setPassword]     = useState("");
+  const [message, setMessage]       = useState("");
   const [messageColor, setMessageColor] = useState("red");
-  const [loading, setLoading]   = useState(false);
+  const [loading, setLoading]       = useState(false);
   const navigate = useNavigate();
 
   const isValidEmail = (email) =>
@@ -20,8 +25,7 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     setMessage("");
-    
-    // Client‑side validation
+
     if (!username || !email || !password) {
       setMessageColor("red");
       return setMessage("All fields are required!");
@@ -43,6 +47,8 @@ const Register = () => {
         { headers: { "Content-Type": "application/json" } }
       );
 
+      console.log("Signup response:", status, data);
+
       if (status === 201) {
         setMessageColor("green");
         setMessage("✅ Registration successful! Redirecting to Login...");
@@ -63,6 +69,10 @@ const Register = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    console.log("Using API base URL:", API);
+  }, []);
 
   return (
     <div style={styles.container}>
